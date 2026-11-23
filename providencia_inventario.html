@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Grupo Textil Providencia | Control de inventarios</title>
+<style>
+:root{--navy:#18324b;--blue:#285d7b;--teal:#3d8b83;--cream:#f5f3ee;--ink:#23313d;--muted:#6b7882;--line:#dfe5e8;--red:#b94b4b;--gold:#bd8b38}
+*{box-sizing:border-box}body{margin:0;background:var(--cream);color:var(--ink);font:15px/1.5 Arial,sans-serif}
+header{background:linear-gradient(120deg,var(--navy),var(--blue));color:white;padding:28px 5vw 24px}
+.brand{font-size:13px;letter-spacing:2px;text-transform:uppercase;opacity:.85}.hero{display:flex;justify-content:space-between;align-items:end;gap:20px;flex-wrap:wrap}.hero h1{font-size:clamp(27px,4vw,40px);margin:9px 0 5px}.hero p{margin:0;color:#e0eaf0;max-width:650px}
+main{max-width:1180px;margin:25px auto;padding:0 18px}.tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px}.tab{border:1px solid var(--line);background:white;color:var(--navy);padding:10px 15px;border-radius:9px;cursor:pointer;font-weight:bold}.tab.active{background:var(--teal);color:white;border-color:var(--teal)}
+.panel{display:none}.panel.active{display:block}.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:13px;margin-bottom:18px}.card,.section{background:white;border:1px solid var(--line);border-radius:13px;padding:17px;box-shadow:0 3px 12px #1b354508}.card small{color:var(--muted)}.metric{font-size:27px;font-weight:bold;color:var(--navy);margin-top:5px}.section{margin-bottom:16px}.section h2{font-size:19px;margin:0 0 12px;color:var(--navy)}.muted{color:var(--muted)}.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}
+label{display:block;font-size:13px;font-weight:bold;margin:8px 0 4px;color:#46545f}input,select{width:100%;padding:10px;border:1px solid #ccd6dc;border-radius:8px;background:#fff;font:inherit}button.primary{background:var(--navy);color:white;border:0;border-radius:8px;padding:10px 15px;cursor:pointer;font-weight:bold;margin-top:12px}button.secondary{background:#edf3f5;color:var(--navy);border:1px solid #d6e1e5;border-radius:8px;padding:8px 12px;cursor:pointer}
+table{width:100%;border-collapse:collapse;font-size:14px}th,td{text-align:left;padding:11px 9px;border-bottom:1px solid var(--line)}th{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.4px}td:last-child,th:last-child{text-align:right}.table-wrap{overflow-x:auto}.status{font-size:12px;padding:4px 8px;border-radius:20px;background:#e5f2ed;color:#286c55}.status.low{background:#fae9e7;color:#9c3939}.notice{background:#f8f2e6;border-left:4px solid var(--gold);padding:12px;border-radius:7px;margin-top:12px}.empty{padding:18px;text-align:center;color:var(--muted)}
+footer{text-align:center;color:var(--muted);padding:25px;font-size:12px}
+@media(max-width:600px){header{padding:23px 18px}.hero h1{font-size:28px}.section{padding:13px}th,td{padding:9px 7px}}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">Gestión de almacén · Proyecto académico</div>
+  <div class="hero">
+    <div><h1>Grupo Textil Providencia</h1><p>Panel de control de inventarios para materias primas y productos terminados.</p></div>
+    <div style="font-size:12px;color:#e0eaf0">Sistema demostrativo</div>
+  </div>
+</header>
+<main>
+  <nav class="tabs" aria-label="Secciones">
+    <button class="tab active" data-tab="inicio">Resumen</button>
+    <button class="tab" data-tab="inventario">Inventario</button>
+    <button class="tab" data-tab="movimientos">Registrar movimiento</button>
+    <button class="tab" data-tab="empresa">Empresa y proyecto</button>
+  </nav>
+
+  <section id="inicio" class="panel active">
+    <div class="cards">
+      <div class="card"><small>Artículos registrados</small><div class="metric" id="totalItems">0</div></div>
+      <div class="card"><small>Unidades en existencia</small><div class="metric" id="totalUnits">0</div></div>
+      <div class="card"><small>Artículos con stock bajo</small><div class="metric" id="lowItems">0</div></div>
+      <div class="card"><small>Movimientos registrados</small><div class="metric" id="totalMoves">0</div></div>
+    </div>
+    <div class="section"><h2>Alertas de inventario</h2><div id="alerts"></div></div>
+    <div class="section"><h2>Últimos movimientos</h2><div class="table-wrap"><table><thead><tr><th>Fecha</th><th>Artículo</th><th>Tipo</th><th>Cantidad</th></tr></thead><tbody id="recent"></tbody></table></div></div>
+  </section>
+
+  <section id="inventario" class="panel">
+    <div class="section">
+      <h2>Existencias</h2>
+      <p class="muted">Los datos iniciales son ejemplos editables para demostrar el funcionamiento. Puedes agregar tus propios artículos.</p>
+      <div class="table-wrap"><table><thead><tr><th>Artículo</th><th>Categoría</th><th>Unidad</th><th>Existencia</th><th>Mínimo</th><th>Estado</th></tr></thead><tbody id="stockRows"></tbody></table></div>
+    </div>
+    <div class="section">
+      <h2>Agregar artículo</h2>
+      <div class="grid2">
+        <div><label for="newName">Nombre del artículo</label><input id="newName" placeholder="Ej. Hilo poliéster"></div>
+        <div><label for="newCategory">Categoría</label><select id="newCategory"><option>Materia prima</option><option>Producto terminado</option><option>Empaque</option></select></div>
+        <div><label for="newUnit">Unidad de medida</label><select id="newUnit"><option>kg</option><option>piezas</option><option>litros</option><option>cajas</option><option>metros</option></select></div>
+        <div><label for="newQty">Existencia inicial</label><input id="newQty" type="number" min="0" value="0"></div>
+        <div><label for="newMin">Stock mínimo</label><input id="newMin" type="number" min="0" value="10"></div>
+      </div>
+      <button class="primary" id="addItem">Agregar al inventario</button>
+    </div>
+  </section>
+
+  <section id="movimientos" class="panel">
+    <div class="section">
+      <h2>Registrar entrada o salida</h2>
+      <p class="muted">Las entradas aumentan las existencias y las salidas las disminuyen. No se permiten salidas mayores al stock disponible.</p>
+      <div class="grid2">
+        <div><label for="moveItem">Artículo</label><select id="moveItem"></select></div>
+        <div><label for="moveType">Tipo de movimiento</label><select id="moveType"><option value="Entrada">Entrada</option><option value="Salida">Salida</option></select></div>
+        <div><label for="moveQty">Cantidad</label><input id="moveQty" type="number" min="1" placeholder="Ej. 25"></div>
+        <div><label for="moveNote">Observación (opcional)</label><input id="moveNote" placeholder="Ej. Recepción de proveedor"></div>
+      </div>
+      <button class="primary" id="saveMove">Guardar movimiento</button>
+      <div id="moveMessage" class="muted" role="status"></div>
+    </div>
+    <div class="section"><h2>Historial de movimientos</h2><div class="table-wrap"><table><thead><tr><th>Fecha</th><th>Artículo</th><th>Tipo</th><th>Cantidad</th><th>Observación</th></tr></thead><tbody id="history"></tbody></table></div></div>
+  </section>
+
+  <section id="empresa" class="panel">
+    <div class="section">
+      <h2>Acerca del proyecto</h2>
+      <p>Este sitio es un prototipo académico de apoyo al control de inventarios de Grupo Textil Providencia. Permite visualizar existencias, registrar entradas y salidas y reconocer artículos que requieren reposición.</p>
+      <h2>Objetivo</h2>
+      <p>Organizar la información del almacén para facilitar el seguimiento de materias primas, materiales de empaque y productos terminados, contribuyendo a una mejor planeación de compras y producción.</p>
+      <h2>Alcance del prototipo</h2>
+      <ul><li>Registro básico de artículos y unidades de medida.</li><li>Control de entradas y salidas.</li><li>Consulta de existencias y alertas por stock mínimo.</li><li>Historial de movimientos almacenado en este navegador.</li></ul>
+      <div class="notice"><b>Importante:</b> esta versión guarda los cambios únicamente en el navegador y dispositivo donde se utiliza. No es una base de datos compartida ni sustituye un sistema empresarial. Los registros de ejemplo deben validarse y reemplazarse con datos reales autorizados.</div>
+    </div>
+  </section>
+</main>
+<footer>Proyecto académico · Control de inventarios · Grupo Textil Providencia</footer>
+<script>
+const initialItems=[
+{id:1,name:"Hilo de poliéster",category:"Materia prima",unit:"kg",qty:420,min:100},
+{id:2,name:"Colorante textil",category:"Materia prima",unit:"kg",qty:35,min:15},
+{id:3,name:"Suavizante",category:"Materia prima",unit:"litros",qty:28,min:10},
+{id:4,name:"Hilo para coser",category:"Materia prima",unit:"kg",qty:18,min:8},
+{id:5,name:"Etiquetas",category:"Empaque",unit:"piezas",qty:1200,min:300},
+{id:6,name:"Bolsas",category:"Empaque",unit:"piezas",qty:900,min:250},
+{id:7,name:"Cobertor terminado",category:"Producto terminado",unit:"piezas",qty:500,min:100}
+];
+let items=JSON.parse(localStorage.getItem("providencia_items")||"null")||initialItems;
+let moves=JSON.parse(localStorage.getItem("providencia_moves")||"[]");
+let nextId=Math.max(0,...items.map(x=>x.id))+1;
+const $=id=>document.getElementById(id);
+function save(){localStorage.setItem("providencia_items",JSON.stringify(items));localStorage.setItem("providencia_moves",JSON.stringify(moves));render()}
+function fmtDate(d){return new Date(d).toLocaleString("es-MX",{dateStyle:"short",timeStyle:"short"})}
+function render(){
+$("totalItems").textContent=items.length;
+$("totalUnits").textContent=items.reduce((s,x)=>s+Number(x.qty),0).toLocaleString("es-MX");
+$("lowItems").textContent=items.filter(x=>x.qty<=x.min).length;
+$("totalMoves").textContent=moves.length;
+const low=items.filter(x=>x.qty<=x.min);
+$("alerts").innerHTML=low.length?low.map(x=>`<div style="padding:8px 0"><span class="status low">Stock bajo</span> <b>${esc(x.name)}</b> — quedan ${x.qty} ${esc(x.unit)} (mínimo: ${x.min})</div>`).join(""):'<div class="empty">No hay alertas. Las existencias están por encima del mínimo configurado.</div>';
+$("stockRows").innerHTML=items.map(x=>`<tr><td>${esc(x.name)}</td><td>${esc(x.category)}</td><td>${esc(x.unit)}</td><td>${x.qty}</td><td>${x.min}</td><td><span class="status ${x.qty<=x.min?'low':''}">${x.qty<=x.min?'Reponer':'Disponible'}</span></td></tr>`).join("");
+$("moveItem").innerHTML=items.map(x=>`<option value="${x.id}">${esc(x.name)} (${x.qty} ${esc(x.unit)})</option>`).join("");
+const rows=moves.slice().reverse();
+$("recent").innerHTML=rows.slice(0,5).map(m=>`<tr><td>${fmtDate(m.date)}</td><td>${esc(m.name)}</td><td>${m.type}</td><td>${m.qty}</td></tr>`).join("")||'<tr><td colspan="4" class="empty">Aún no hay movimientos.</td></tr>';
+$("history").innerHTML=rows.map(m=>`<tr><td>${fmtDate(m.date)}</td><td>${esc(m.name)}</td><td>${m.type}</td><td>${m.qty}</td><td>${esc(m.note||"—")}</td></tr>`).join("")||'<tr><td colspan="5" class="empty">Aún no hay movimientos.</td></tr>';
+}
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+document.querySelectorAll(".tab").forEach(b=>b.addEventListener("click",()=>{document.querySelectorAll(".tab,.panel").forEach(x=>x.classList.remove("active"));b.classList.add("active");$(b.dataset.tab).classList.add("active")}));
+$("addItem").onclick=()=>{let name=$("newName").value.trim(),qty=Number($("newQty").value),min=Number($("newMin").value);if(!name||qty<0||min<0){alert("Completa el nombre y cantidades válidas.");return}items.push({id:nextId++,name,category:$("newCategory").value,unit:$("newUnit").value,qty,min});$("newName").value="";$("newQty").value=0;save();alert("Artículo agregado.")};
+$("saveMove").onclick=()=>{let item=items.find(x=>x.id===Number($("moveItem").value)),type=$("moveType").value,qty=Number($("moveQty").value);if(!item||!Number.isInteger(qty)||qty<=0){$("moveMessage").textContent="Selecciona un artículo e ingresa una cantidad entera mayor a cero.";return}if(type==="Salida"&&qty>item.qty){$("moveMessage").textContent="No hay existencia suficiente para registrar esa salida.";return}item.qty+=type==="Entrada"?qty:-qty;moves.push({date:new Date().toISOString(),id:item.id,name:item.name,type,qty,note:$("moveNote").value.trim()});$("moveQty").value="";$("moveNote").value="";$("moveMessage").textContent="Movimiento registrado correctamente.";save()};
+render();
+</script>
+</body>
+</html>
